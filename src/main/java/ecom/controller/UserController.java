@@ -39,16 +39,22 @@ public class UserController {
         return userRepository.findAll();
     }
 
+    @GetMapping("/test")
+    public String test() {
+        return "Controller Working";
+    }
+
     static class AuthResponse {
         public String token;
         public User user;
+
         public AuthResponse(String token, User user) {
             this.token = token;
             this.user = user;
         }
     }
 
-    @PostMapping({"/api/users/signup", "/api/auth/signup"})
+    @PostMapping({ "/api/users/signup", "/api/auth/signup" })
     public ResponseEntity<?> signUp(@RequestBody User user) {
         // Simple check: email must be unique
         if (user.getEmail() == null || user.getPassword() == null) {
@@ -68,7 +74,7 @@ public class UserController {
         public String password;
     }
 
-    @PostMapping({"/api/users/signin", "/api/auth/signin"})
+    @PostMapping({ "/api/users/signin", "/api/auth/signin" })
     public ResponseEntity<?> signIn(@RequestBody LoginRequest req) {
         if (req == null || req.email == null || req.password == null) {
             return ResponseEntity.badRequest().body("Email and password required");
@@ -112,7 +118,8 @@ public class UserController {
     }
 
     @PutMapping("/api/users/profile")
-    public ResponseEntity<?> updateProfile(@RequestHeader(value = "Authorization", required = false) String authHeader, @RequestBody User profileUpdate) {
+    public ResponseEntity<?> updateProfile(@RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody User profileUpdate) {
         Long userId = getUserIdFromHeader(authHeader);
         if (userId == null) {
             return ResponseEntity.status(401).body("Authorization required");
@@ -122,12 +129,18 @@ public class UserController {
             return ResponseEntity.status(404).body("User not found");
         }
         User user = userOpt.get();
-        if (profileUpdate.getName() != null) user.setName(profileUpdate.getName());
-        if (profileUpdate.getPhone() != null) user.setPhone(profileUpdate.getPhone());
-        if (profileUpdate.getAddress() != null) user.setAddress(profileUpdate.getAddress());
-        if (profileUpdate.getCardNumber() != null) user.setCardNumber(profileUpdate.getCardNumber());
-        if (profileUpdate.getCardHolderName() != null) user.setCardHolderName(profileUpdate.getCardHolderName());
-        if (profileUpdate.getCardExpiry() != null) user.setCardExpiry(profileUpdate.getCardExpiry());
+        if (profileUpdate.getName() != null)
+            user.setName(profileUpdate.getName());
+        if (profileUpdate.getPhone() != null)
+            user.setPhone(profileUpdate.getPhone());
+        if (profileUpdate.getAddress() != null)
+            user.setAddress(profileUpdate.getAddress());
+        if (profileUpdate.getCardNumber() != null)
+            user.setCardNumber(profileUpdate.getCardNumber());
+        if (profileUpdate.getCardHolderName() != null)
+            user.setCardHolderName(profileUpdate.getCardHolderName());
+        if (profileUpdate.getCardExpiry() != null)
+            user.setCardExpiry(profileUpdate.getCardExpiry());
 
         User saved = userRepository.save(user);
         return ResponseEntity.ok(saved);
@@ -151,7 +164,7 @@ public class UserController {
         public String password;
     }
 
-    @PostMapping({"/api/users/forgot-password", "/api/auth/forgot-password"})
+    @PostMapping({ "/api/users/forgot-password", "/api/auth/forgot-password" })
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest req) {
         if (req == null || req.email == null || req.phone == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "Email and phone number are required"));
@@ -160,7 +173,8 @@ public class UserController {
         String phone = req.phone.trim();
         Optional<User> userOpt = userRepository.findByEmailAndPhone(email, phone);
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(Map.of("message", "No user found with the provided email and phone number."));
+            return ResponseEntity.status(404)
+                    .body(Map.of("message", "No user found with the provided email and phone number."));
         }
 
         // Generate 6 digit random OTP
@@ -177,7 +191,8 @@ public class UserController {
                 org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
                 message.setTo(email);
                 message.setSubject("Your Digital Store OTP");
-                message.setText("Hello,\n\nYour OTP for password reset is: " + otp + "\n\nRegards,\nDigital Products Store");
+                message.setText(
+                        "Hello,\n\nYour OTP for password reset is: " + otp + "\n\nRegards,\nDigital Products Store");
                 mailSender.send(message);
                 System.out.println("Email sent successfully to " + email);
             } catch (Exception e) {
@@ -195,7 +210,7 @@ public class UserController {
         public String otp;
     }
 
-    @PostMapping({"/api/users/verify-otp", "/api/auth/verify-otp"})
+    @PostMapping({ "/api/users/verify-otp", "/api/auth/verify-otp" })
     public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest req) {
         if (req == null || req.email == null || req.otp == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "Email and OTP are required"));
@@ -209,7 +224,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "OTP verified successfully."));
     }
 
-    @PostMapping({"/api/users/reset-password", "/api/auth/reset-password"})
+    @PostMapping({ "/api/users/reset-password", "/api/auth/reset-password" })
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest req) {
         if (req == null || req.email == null || req.otp == null || req.password == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "Email, OTP, and new password are required"));
@@ -236,6 +251,7 @@ public class UserController {
         emailToOtpMap.remove(email);
 
         System.out.println("Password successfully updated in DB for user: " + email);
-        return ResponseEntity.ok(Map.of("message", "Password reset successfully. Please sign in with your new password."));
+        return ResponseEntity
+                .ok(Map.of("message", "Password reset successfully. Please sign in with your new password."));
     }
 }
